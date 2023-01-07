@@ -1,4 +1,4 @@
-function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observation,RunParam,varargin)
+function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observation,ObservationSpks,RunParam,varargin)
 %
 % Extract neural trajectories using CILDS model
 %                z(t) = Dz(t-1) + u(t)
@@ -16,6 +16,12 @@ function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observ
 % INPUT
 %
 %      Observation  - Structure containing recorded data (fluorescence
+%                     traces)
+%                           -Dimensions: 1 x N_TRIAL
+%                           -Fields:
+%                               y (N_NEURON x T) -- neural data
+%
+%      ObservationSpks - Structure containing recorded data (deconvolved fluorescence
 %                     traces)
 %                           -Dimensions: 1 x N_TRIAL
 %                           -Fields:
@@ -158,6 +164,7 @@ if splitTrainTest
     trainInd = RunParam.TRAININD;
     testInd = RunParam.TESTIND;
     TrainObs = Observation(trainInd);
+    TrainObsSpks = ObservationSpks(trainInd);
     TestObs = Observation(testInd);
 else
     TrainObs = Observation; % Set training and testing to be the same data
@@ -188,7 +195,7 @@ if ~exist(strcat(fileHeader,'_partial.mat'),'file') % Initialization needed only
                 TempParam = cilds_initializerandom(latDim,obsDim,'InitParam',InitParam);
             end
         case 'ldsInit'
-            EstParam = cilds_initializelds(TrainObs,obsDim,latDim,InitParam);
+            EstParam = cilds_initializelds(TrainObsSpks,obsDim,latDim,InitParam);
         case 'fixedInit'
             EstParam = InitParam;
         otherwise
