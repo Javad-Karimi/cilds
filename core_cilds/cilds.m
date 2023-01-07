@@ -1,4 +1,4 @@
-function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observation,ObservationSpks,RunParam,varargin)
+function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observation,RunParam,varargin)
 %
 % Extract neural trajectories using CILDS model
 %                z(t) = Dz(t-1) + u(t)
@@ -21,11 +21,6 @@ function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observ
 %                           -Fields:
 %                               y (N_NEURON x T) -- neural data
 %
-%      ObservationSpks - Structure containing recorded data (deconvolved fluorescence
-%                     traces)
-%                           -Dimensions: 1 x N_TRIAL
-%                           -Fields:
-%                               y (N_NEURON x T) -- neural data
 %
 %      RunParam    -  Structure containing dimension of observations (no.
 %                     neurons) and dimension of latent variables, training
@@ -133,7 +128,6 @@ function [EstParam, Result, testll,trainll,InitParam,TrainResult] = cilds(Observ
 %% =========== Initialize function parameters ==========================
 p = inputParser;
 p.addRequired('Observation',@isstruct);
-p.addRequired('ObservationSpks',@isstruct);
 p.addRequired('RunParam',@isstruct);
 p.addParameter('maxIter',500,@isscalar);
 p.addParameter('InitParam',struct, @isstruct);
@@ -144,10 +138,9 @@ p.addParameter('leaveOneOut',false,@islogical);
 p.addParameter('partialSaveIter',300,@isscalar);
 p.addParameter('returnTrain',false,@islogical);
 p.addParameter('fileHeader',nan,@ischar);
-p.parse(Observation,ObservationSpks,RunParam,varargin{:});
+p.parse(Observation,RunParam,varargin{:});
 
 Observation = p.Results.Observation;
-ObservationSpks = p.Results.ObservationSpks;
 RunParam = p.Results.RunParam;
 maxIter = p.Results.maxIter;
 InitParam = p.Results.InitParam;
@@ -166,12 +159,9 @@ if splitTrainTest
     trainInd = RunParam.TRAININD;
     testInd = RunParam.TESTIND;
     TrainObs = Observation(trainInd);
-    TrainObsSpks = ObservationSpks(trainInd);
-    TrainObsSpks = ObservationSpks(trainInd);
     TestObs = Observation(testInd);
 else
     TrainObs = Observation; % Set training and testing to be the same data
-    TrainObsSpks = ObservationSpks;
     TestObs = TrainObs;
 end
 
@@ -199,7 +189,7 @@ if ~exist(strcat(fileHeader,'_partial.mat'),'file') % Initialization needed only
                 TempParam = cilds_initializerandom(latDim,obsDim,'InitParam',InitParam);
             end
         case 'ldsInit'
-            EstParam = cilds_initializelds(TrainObs,TrainObsSpks,obsDim,latDim,InitParam);
+            EstParam = cilds_initializelds(TrainObs,obsDim,latDim,InitParam);
         case 'fixedInit'
             EstParam = InitParam;
         otherwise
