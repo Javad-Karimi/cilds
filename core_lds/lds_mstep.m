@@ -85,12 +85,12 @@ sumyy = 0.5*(sumyy+sumyy');
 
 %% A, R, D, P
 if ~isfield(FixParam,'D')
-    D = diag(diag(sumPtt_1))/(diag(diag(sumPt_1)));
+    D = gather(gpuArray(diag(diag(sumPtt_1)))/gpuArray(diag(diag(sumPt_1))));
 else
     D = PrevParam.D;
 end
 if ~isfield(FixParam,'A')
-    A = sumyx/sumPt;
+    A = gather(gpuArray(sumyx)/gpuArray(sumPt));
 else
     A = PrevParam.A;
 end
