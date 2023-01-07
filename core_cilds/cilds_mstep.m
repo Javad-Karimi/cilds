@@ -137,7 +137,7 @@ end
 
 if ~isfield(FixParam,'B')
     if strcmp(changeParam,'BGD')
-        B = diag(diag(sumyc))/(diag(diag(sumcc))); % Eqn 1 of section 2
+        B = gather(gpuArray(diag(diag(sumyc)))/gpuArray(diag(diag(sumcc)))); % Eqn 1 of section 2
     end
 end
 
@@ -174,13 +174,13 @@ end
 
 if ~isfield(FixParam,'G')
     if strcmp(changeParam,'BGD')
-        G = (diag(diag(sumcc_1)) - diag(diag(A*sumzc_1)) - diag(diag(b*sumc_1')))/(diag(diag(sumc_1c_1))); %Eqn 3 of section 2
+        G = gather(gpuArray(diag(diag(sumcc_1)) - diag(diag(A*sumzc_1)) - diag(diag(b*sumc_1')))/gpuArray(diag(diag(sumc_1c_1)))); %Eqn 3 of section 2
     end
 end
 
 if ~isfield(FixParam,'A')
     if strcmp(changeParam,'A')
-        A = (sumcz - G*sumzc_1' - b*sumz')/(sumzz); %Eqn 4 of section 2
+        A = gather(gpuArray(sumcz - G*sumzc_1' - b*sumz'))/gpuArray(sumzz)); %Eqn 4 of section 2
     end
 end
 
@@ -213,7 +213,7 @@ end
 
 if ~isfield(FixParam,'D')
     if strcmp(changeParam,'BGD')
-        D = diag(diag(sumz1z))/(diag(diag(sumzz))); %Eqn 7 of section 2
+        D = gather(gpuArray(diag(diag(sumz1z)))/gpuArray(diag(diag(sumzz)))); %Eqn 7 of section 2
     end
 end
 
