@@ -75,7 +75,7 @@ J = zeros(N_LATENT,N_LATENT,T);
 Xp(:,:,1) = repmat(h_1',[N_TRIAL,1]); % E[z_t]= h_1, t=1
 Vp(:,:,1) = G_1;  % E[z_t*z_t^T] = G_1, t=1
 
-invVy = inv(A*Vp(:,:,1)*A' + R); % Auxiliary computations
+invVy = gather(inv(gpuArray(A*Vp(:,:,1)*A' + R))); % Auxiliary computations
 y_diff = (squeeze(Y(:,:,1))-[ repmat(b',[N_TRIAL,1])] )-...
     Xp(:,:,1)*A'; % Y-b-xA
 Ktau        = Vp(:,:,1)*A'*invVy;
@@ -87,7 +87,7 @@ Xp(:,:,1+1) = Xc(:,:,1)*D';
 Vp(:,:,1+1) = D*Vc(:,:,1)*D'+P;
 Vp(:,:,1+1) = (Vp(:,:,1+1) + Vp(:,:,1+1)')/2;    
 
-invR    = inv(R);
+invR    = gather(inv(gpuArray(R)));
 invR    = (invR + invR')/2;
 AinvR   = A'*invR;
 AinvRA  = AinvR*A;
@@ -101,7 +101,7 @@ end
 %% === Kalman filter (forward step)===
 for t = 1+1:T
     y_diff = (Y(:,:,t)-repmat(b',[N_TRIAL,1]))-Xp(:,:,t)*A';      % Auxiliary computations    
-    K(:,:,t)	= ((eye(N_LATENT) + Vp(:,:,t)*AinvRA)\Vp(:,:,t))*AinvR;
+    K(:,:,t)	= gather((gpuArray(eye(N_LATENT) + Vp(:,:,t)*AinvRA)\gpuArray(Vp(:,:,t))))*AinvR;
     Xc(:,:,t)   = Xp(:,:,t) + y_diff*K(:,:,t)';
     Vc(:,:,t)   = (eye(N_LATENT) - K(:,:,t)*A)*Vp(:,:,t);
     Vc(:,:,t)   = (Vc(:,:,t) + Vc(:,:,t)')/2;                               
@@ -127,7 +127,7 @@ if compll; ll = ll - 0.5*N_TRIAL*N_NEURON*T*log(2*pi); end
 Xf(:,:,T) = Xc(:,:,T);
 Vf(:,:,T) = Vc(:,:,T);
 for t = (T-1):-1:1
-    J(:,:,t) = Vc(:,:,t)*D'/(Vp(:,:,t+1));
+    J(:,:,t) = gather(gpuArray(Vc(:,:,t)*D')/gpuArray(Vp(:,:,t+1)));
     
     Xf(:,:,t) = Xc(:,:,t) + (Xf(:,:,t+1)-Xc(:,:,t)*D')*J(:,:,t)';
     Vf(:,:,t) = Vc(:,:,t) + J(:,:,t)*(Vf(:,:,t+1) - Vp(:,:,t+1))*J(:,:,t)';
