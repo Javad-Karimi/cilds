@@ -180,7 +180,7 @@ end
 
 if ~isfield(FixParam,'A')
     if strcmp(changeParam,'A')
-        A = gather(gpuArray(sumcz - G*sumzc_1' - b*sumz'))/gpuArray(sumzz)); %Eqn 4 of section 2
+        A = gather(gpuArray(sumcz - G*sumzc_1' - b*sumz')/gpuArray(sumzz)); %Eqn 4 of section 2
     end
 end
 
