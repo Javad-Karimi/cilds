@@ -1,4 +1,4 @@
-function Param = cilds_initializelds(Observation, DeconvOutput, N_NEURON,N_LATENT,InitParam)
+function Param = cilds_initializelds(Observation, N_NEURON,N_LATENT,InitParam)
 %  Function cilds_initializelds uses deconvolution and lds to generate the 
 %  parameters G, A, b, Q, B, R, D, P, mu_1, cov_1, h_2, G_2 for the model:
 %                z(t) = Dz(t-1) + u(t)
@@ -14,11 +14,6 @@ function Param = cilds_initializelds(Observation, DeconvOutput, N_NEURON,N_LATEN
 %                           -Fields:
 %                               y (N_NEURON x T) -- neural data
 %
-%      DeconvOutput  - Structure containing recorded data (deconvolved fluorescence
-%                     traces)
-%                           -Dimensions: 1 x N_TRIAL
-%                           -Fields:
-%                               y (N_NEURON x T) -- neural data
 %
 %      N_NEURON     - Scalar indicating number of neurons (dimensionality
 %                     of observed data)
@@ -34,22 +29,22 @@ function Param = cilds_initializelds(Observation, DeconvOutput, N_NEURON,N_LATEN
 
 RunParam.N_LATENT = N_LATENT; RunParam.N_NEURON = N_NEURON;
 
-% %% === Deconvolve ===
-% addpath(genpath('../utilities')); % Folder containing deconvolve function
-% % Initializations for deconvolution
-% RunParam.GAMMAKNOWN = false;
-% RunParam.DECONVOLUTIONTYPE = 'constrained';
-% RunParam.INITIALIZEGAMMA = true;
-% RunParam.OPTIMIZEB = true;
-% RunParam.OPTIMIZEPARS = true;
-% RunParam.TRAININD = 1:size(Observation,2);
-% if isfield(InitParam,'G')
-%    RunParam.GAMMA = mean(diag(InitParam.G));
-%    disp(RunParam.GAMMA);
-% else
-% RunParam.GAMMA = 0.9985;
-% end
-% [DeconvOutput] = deconvolve(RunParam,Observation,'splitTestTrain',false);
+%% === Deconvolve ===
+addpath(genpath('../utilities')); % Folder containing deconvolve function
+% Initializations for deconvolution
+RunParam.GAMMAKNOWN = false;
+RunParam.DECONVOLUTIONTYPE = 'constrained';
+RunParam.INITIALIZEGAMMA = true;
+RunParam.OPTIMIZEB = true;
+RunParam.OPTIMIZEPARS = true;
+RunParam.TRAININD = 1:size(Observation,2);
+if isfield(InitParam,'G')
+    RunParam.GAMMA = mean(diag(InitParam.G));
+    disp(RunParam.GAMMA);
+else
+RunParam.GAMMA = 0.9985;
+end
+[DeconvOutput] = deconvolve(RunParam,Observation,'splitTestTrain',false);
 
 %% === LDS ===
 addpath(genpath('../core_lds')); % Access core_lds folder for LDS 
