@@ -92,7 +92,7 @@ J = zeros(N_LATENT+N_NEURON,N_LATENT+N_NEURON,T); % J_(t-1)
 Xp(:,:,1) = repmat(nu_1',[NTrial,1]) ;   % E[l_t]= nu_1, t=1
 Vp(:,:,1) = sig_1;       % E[l_t*l_t^T] = sig_1, t=1
 
-invVy = inv(Phi*Vp(:,:,1)*Phi' + R);
+invVy = gather(inv(gpuArray(Phi*Vp(:,:,1)*Phi' + R)));
 y_diff = squeeze(Y(:,:,1))-...
     Xp(:,:,1)*Phi'; % Y-d-xPhi
 
@@ -106,7 +106,7 @@ Vp(:,:,1+1) = L*Vc(:,:,1)*L'+S;
 Vp(:,:,1+1) = (Vp(:,:,1+1) + Vp(:,:,1+1)')/2;
 
 
-invR    = inv(R);
+invR    = gather(inv(gpuArray(R)));
 invR    = (invR + invR')/2; % Ensure symmetry
 PhiinvR   = Phi'*invR;
 
@@ -122,7 +122,7 @@ for t = 1+1:T
     if speedup && t > 2 && sum(sum((squeeze(K(:,:,t-1))-squeeze(K(:,:,t-2))<1e-15)))==size(K,1)*size(K,2)
         K(:,:,t) = K(:,:,t-1);
     else
-        K(:,:,t)    = Vp(:,:,t)*Phi'/(R+Phi*Vp(:,:,t)*Phi'); %Eqn 3 in 1.1
+        K(:,:,t)    = gather(gpuArray(Vp(:,:,t)*Phi')/gpuArray((R+Phi*Vp(:,:,t)*Phi'))); %Eqn 3 in 1.1        
         invVy = invR*(eye(N_NEURON) - Phi*K(:,:,t)); 
         invVy = (invVy + invVy')/2;
     end
@@ -150,7 +150,7 @@ for t = 1:T-1
     if speedup && t>3 && sum(sum(abs(squeeze(J(:,:,t-1))-squeeze(J(:,:,t-2)))<1e-14))==size(J,1)*size(J,2)
         J(:,:,t) = J(:,:,t-1);
     else
-        J(:,:,t) = Vc(:,:,t)*L'/(Vp(:,:,t+1)); % Eqn 1 in 1.2
+        J(:,:,t) = gather(gpuArray(Vc(:,:,t)*L')/gpuArray(Vp(:,:,t+1))); % Eqn 1 in 1.2
     end
 end
 for t = (T-1):-1:1
