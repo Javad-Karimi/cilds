@@ -57,7 +57,13 @@ gamma = RunParam(1).GAMMA;
 params.p = 1; params.B = 1;
 
 %% === Deconvolve training data ====
-for iSplit = 1:size(TrainFtrace,2) % Deconvolution is performed every trial separately
+DeconvOutput_b = cell(size(TrainFtrace,2),1);
+DeconvOutput_smin = cell(size(TrainFtrace,2),1);
+DeconvOutput_gam = cell(size(TrainFtrace,2),1);
+DeconvOutput_y = cell(size(TrainFtrace,2),1);
+DeconvOutput_c = cell(size(TrainFtrace,2),1);
+
+parfor iSplit = 1:size(TrainFtrace,2) % Deconvolution is performed every trial separately
     trainData = num2cell(TrainFtrace(iSplit).y,2); % Format into cell type so can use cellfun
     
     spktrain = zeros(size(TrainFtrace(iSplit).y,1),size(TrainFtrace(iSplit).y,2));
@@ -113,12 +119,21 @@ for iSplit = 1:size(TrainFtrace,2) % Deconvolution is performed every trial sepa
     spktrain(:,1:size(sTemp,2)) = sTemp;
     calcium(:,1:size(cTemp,2)) = cTemp;
     
-    DeconvOutput(splitTrainInd(iSplit)).b = b;
-    DeconvOutput(splitTrainInd(iSplit)).smin = smin;
-    DeconvOutput(splitTrainInd(iSplit)).gam = gam;
-    DeconvOutput(splitTrainInd(iSplit)).y = spktrain;
-    DeconvOutput(splitTrainInd(iSplit)).c = calcium;
+    DeconvOutput_b{iSplit} = b;
+    DeconvOutput_smin{iSplit} = smin;
+    DeconvOutput_gam{iSplit} = gam;
+    DeconvOutput_y{iSplit} = spktrain;
+    DeconvOutput_c{iSplit} = calcium;
 end
+
+for ii = 1:size(TrainFtrace,2)
+    DeconvOutput(splitTrainInd(ii)).b = DeconvOutput_b{ii};
+    DeconvOutput(splitTrainInd(ii)).smin = DeconvOutput_smin{ii};
+    DeconvOutput(splitTrainInd(ii)).gam = DeconvOutput_gam{ii};
+    DeconvOutput(splitTrainInd(ii)).y = DeconvOutput_y{ii};
+    DeconvOutput(splitTrainInd(ii)).c = DeconvOutput_c{ii};
+end
+
 gam = mean([DeconvOutput(splitTrainInd).gam],2);
 b = mean([DeconvOutput(splitTrainInd).b],2);
 smin = mean([DeconvOutput(splitTrainInd).smin],2);
