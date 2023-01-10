@@ -125,6 +125,7 @@ parfor iSplit = 1:size(TrainFtrace,2) % Deconvolution is performed every trial s
     DeconvOutput_y{iSplit} = spktrain;
     DeconvOutput_c{iSplit} = calcium;
 end
+delete(gcp);
 
 for ii = 1:size(TrainFtrace,2)
     DeconvOutput(splitTrainInd(ii)).b = DeconvOutput_b{ii};
